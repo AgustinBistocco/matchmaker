@@ -11,32 +11,48 @@
   <div class="max-w-4xl mx-auto space-y-8">
     <header class="text-center">
       <h1 class="text-3xl font-bold text-green-400">⚽ MatchMaker Fútbol</h1>
-      <p class="text-gray-400">Armá equipos equilibrados por posición y nivel</p>
+      <p class="text-gray-400">Armá equipos equilibrados por nivel, posición y estadísticas</p>
+      <p id="errorBanner" class="hidden mt-3 text-sm bg-red-900/60 border border-red-500 text-red-200 rounded px-3 py-2"></p>
     </header>
 
-    <!-- Formulario de Registro / Edición -->
+    <!-- Formulario -->
     <section class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
       <div class="flex justify-between items-center mb-4">
         <h2 id="formTitle" class="text-xl font-semibold">Registrar Jugador</h2>
-        <button id="btnCancelEdit" class="hidden text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded">Cancelar Edición</button>
+        <button id="btnCancelEdit" type="button" class="hidden text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded">Cancelar Edición</button>
       </div>
-      
-      <form id="playerForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+      <form id="playerForm" class="space-y-4">
         <input type="hidden" id="playerId">
-        <input type="text" id="nombre" placeholder="Nombre de jugador" required class="bg-gray-700 px-4 py-2 rounded text-white border border-gray-600 focus:outline-none focus:border-green-500">
-        <input type="number" id="media" placeholder="Media (1-99)" min="1" max="99" required class="bg-gray-700 px-4 py-2 rounded text-white border border-gray-600 focus:outline-none focus:border-green-500">
-        <select id="posicion" required class="bg-gray-700 px-4 py-2 rounded text-white border border-gray-600 focus:outline-none focus:border-green-500">
-          <option value="">Posición principal</option>
-          <option value="POR">Arquero (POR)</option>
-          <option value="DEF">Defensor (DEF)</option>
-          <option value="MED">Mediocampista (MED)</option>
-          <option value="DEL">Delantero (DEL)</option>
-        </select>
-        <button type="submit" id="btnSubmit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded transition">Guardar</button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input type="text" id="nombre" placeholder="Nombre de jugador" maxlength="30" required class="bg-gray-700 px-4 py-2 rounded text-white border border-gray-600 focus:outline-none focus:border-green-500">
+          <select id="posicion" required class="bg-gray-700 px-4 py-2 rounded text-white border border-gray-600 focus:outline-none focus:border-green-500">
+            <option value="">Posición principal</option>
+            <option value="POR">Arquero (POR)</option>
+            <option value="DEF">Defensor (DEF)</option>
+            <option value="MED">Mediocampista (MED)</option>
+            <option value="DEL">Delantero (DEL)</option>
+          </select>
+          <button type="submit" id="btnSubmit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded transition">Guardar</button>
+        </div>
+
+        <div>
+          <p class="text-xs text-gray-400 mb-2">Estadísticas (1-99). La media se calcula sola según la posición.</p>
+          <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <label class="text-xs text-gray-300">DEF <input type="number" data-stat="DEF" min="1" max="99" required class="stat-input w-full mt-1 bg-gray-700 px-2 py-2 rounded border border-gray-600 focus:outline-none focus:border-green-500"></label>
+            <label class="text-xs text-gray-300">PAS <input type="number" data-stat="PAS" min="1" max="99" required class="stat-input w-full mt-1 bg-gray-700 px-2 py-2 rounded border border-gray-600 focus:outline-none focus:border-green-500"></label>
+            <label class="text-xs text-gray-300">TIR <input type="number" data-stat="TIR" min="1" max="99" required class="stat-input w-full mt-1 bg-gray-700 px-2 py-2 rounded border border-gray-600 focus:outline-none focus:border-green-500"></label>
+            <label class="text-xs text-gray-300">FIS <input type="number" data-stat="FIS" min="1" max="99" required class="stat-input w-full mt-1 bg-gray-700 px-2 py-2 rounded border border-gray-600 focus:outline-none focus:border-green-500"></label>
+            <label class="text-xs text-gray-300">ARQ <input type="number" data-stat="ARQ" min="1" max="99" required class="stat-input w-full mt-1 bg-gray-700 px-2 py-2 rounded border border-gray-600 focus:outline-none focus:border-green-500"></label>
+            <div class="text-xs text-gray-300">Media
+              <div id="mediaPreview" class="mt-1 py-2 text-center rounded bg-gray-900 border border-gray-600 font-mono font-bold text-green-400 text-base">–</div>
+            </div>
+          </div>
+        </div>
       </form>
     </section>
 
-    <!-- Selección de Convocados -->
+    <!-- Convocados -->
     <section class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 space-y-4">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -45,115 +61,184 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <input type="text" id="searchInput" placeholder="Buscar jugador..." class="bg-gray-700 text-sm px-3 py-1.5 rounded border border-gray-600 focus:outline-none focus:border-green-500 flex-1 md:w-40">
+          <input type="text" id="searchInput" placeholder="Buscar jugador o posición..." class="bg-gray-700 text-sm px-3 py-1.5 rounded border border-gray-600 focus:outline-none focus:border-green-500 flex-1 md:w-52">
+          <button id="btnConfirmados" class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded border border-gray-600">Elegir confirmados</button>
           <button id="btnUnselectAll" class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded border border-gray-600">Desmarcar Todos</button>
-          <button id="btnArmar" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded transition disabled:opacity-50">Armar Equipos</button>
+          <button id="btnArmar" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded transition">Armar Equipos</button>
         </div>
       </div>
 
-      <div id="playerList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        <!-- Carga dinámica -->
-      </div>
+      <div id="playerList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
     </section>
 
-    <!-- Resultado de Equipos -->
+    <!-- Historial -->
+    <section class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+      <h2 class="text-xl font-semibold mb-3">Últimos partidos</h2>
+      <div id="historial" class="space-y-2 text-sm"></div>
+    </section>
+
+    <!-- Resultado -->
     <section id="resultsSection" class="hidden space-y-4">
-      <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
-        <h3 class="text-lg font-bold text-green-400">Equipos Armados</h3>
+      <div class="flex flex-col md:flex-row justify-between md:items-center gap-3 bg-gray-800 p-4 rounded-xl border border-gray-700">
+        <div>
+          <h3 class="text-lg font-bold text-green-400">Equipos Armados</h3>
+          <p id="balanceInfo" class="text-xs text-gray-400"></p>
+          <p id="warnInfo" class="text-xs text-yellow-400"></p>
+        </div>
         <div class="flex gap-2">
-          <button id="btnResortear" class="bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2 rounded transition flex items-center gap-1">
-            🔀 Re-sortear
-          </button>
-          <button id="btnWsp" class="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded transition flex items-center gap-1">
-            📲 WhatsApp
-          </button>
+          <button id="btnResortear" class="bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2 rounded transition">🔀 Re-sortear</button>
+          <button id="btnWsp" class="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded transition">📲 WhatsApp</button>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-gray-800 p-6 rounded-xl border-2 border-blue-500">
-          <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+          <div class="flex justify-between items-center mb-1 border-b border-gray-700 pb-2">
             <h3 class="text-lg font-bold text-blue-400">Equipo 1</h3>
-            <span class="bg-blue-900 text-blue-200 text-sm font-semibold px-2.5 py-0.5 rounded" id="avgEq1">Media: 0</span>
+            <span class="bg-blue-900 text-blue-200 text-sm font-semibold px-2.5 py-0.5 rounded" id="avgEq1"></span>
           </div>
+          <p id="posEq1" class="text-xs text-gray-400 mb-3"></p>
           <ul id="listEq1" class="space-y-2"></ul>
         </div>
 
         <div class="bg-gray-800 p-6 rounded-xl border-2 border-red-500">
-          <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+          <div class="flex justify-between items-center mb-1 border-b border-gray-700 pb-2">
             <h3 class="text-lg font-bold text-red-400">Equipo 2</h3>
-            <span class="bg-red-900 text-red-200 text-sm font-semibold px-2.5 py-0.5 rounded" id="avgEq2">Media: 0</span>
+            <span class="bg-red-900 text-red-200 text-sm font-semibold px-2.5 py-0.5 rounded" id="avgEq2"></span>
           </div>
+          <p id="posEq2" class="text-xs text-gray-400 mb-3"></p>
           <ul id="listEq2" class="space-y-2"></ul>
+        </div>
+      </div>
+
+      <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
+        <h4 class="font-semibold mb-3">Comparativa</h4>
+        <div id="compare" class="space-y-2 text-sm"></div>
+      </div>
+
+      <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 space-y-3">
+        <h4 class="font-semibold">Datos del partido</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input type="datetime-local" id="fecha" class="bg-gray-700 px-3 py-2 rounded border border-gray-600 text-sm">
+          <input type="text" id="cancha" maxlength="40" placeholder="Cancha" class="bg-gray-700 px-3 py-2 rounded border border-gray-600 text-sm">
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-blue-400 text-sm">Equipo 1</span>
+          <input type="number" id="goles1" min="0" max="99" class="w-16 bg-gray-700 px-2 py-2 rounded border border-gray-600 text-center">
+          <span>-</span>
+          <input type="number" id="goles2" min="0" max="99" class="w-16 bg-gray-700 px-2 py-2 rounded border border-gray-600 text-center">
+          <span class="text-red-400 text-sm">Equipo 2</span>
+          <button id="btnGuardarPartido" class="ml-auto bg-blue-600 hover:bg-blue-500 text-sm font-semibold px-4 py-2 rounded transition">Guardar partido</button>
         </div>
       </div>
     </section>
   </div>
 
-  <!-- Firebase SDK Modules -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Reemplaza con tus claves de Firebase
     const firebaseConfig = {
-        apiKey: "AIzaSyDLD9jgjvzyXYfv43KUMwkmZVNPIK0epnk",
-        authDomain: "futbol-24821.firebaseapp.com",
-        projectId: "futbol-24821",
-        storageBucket: "futbol-24821.firebasestorage.app",
-        messagingSenderId: "911015540483",
-        appId: "1:911015540483:web:fffc82fed7cc8820cf5b36",
-        measurementId: "G-X5PPFF23D6"
-        };
+      apiKey: "AIzaSyDLD9jgjvzyXYfv43KUMwkmZVNPIK0epnk",
+      authDomain: "futbol-24821.firebaseapp.com",
+      projectId: "futbol-24821",
+      storageBucket: "futbol-24821.firebasestorage.app",
+      messagingSenderId: "911015540483",
+      appId: "1:911015540483:web:fffc82fed7cc8820cf5b36",
+      measurementId: "G-X5PPFF23D6"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const playersRef = collection(db, "jugadores");
 
+    const $ = (id) => document.getElementById(id);
+    const POS = ["POR", "DEF", "MED", "DEL"];
+    const STATS = ["DEF", "PAS", "TIR", "FIS", "ARQ"];
+
+    // Peso de cada estadística en la media según posición (suma 1)
+    const W = {
+      POR: { ARQ: 0.6, PAS: 0.15, DEF: 0.15, FIS: 0.1, TIR: 0 },
+      DEF: { DEF: 0.4, FIS: 0.25, PAS: 0.25, TIR: 0.1, ARQ: 0 },
+      MED: { PAS: 0.35, FIS: 0.25, TIR: 0.2, DEF: 0.2, ARQ: 0 },
+      DEL: { TIR: 0.45, FIS: 0.25, PAS: 0.2, DEF: 0.1, ARQ: 0 }
+    };
+
     let allPlayers = [];
     let selectedPlayerIds = new Set();
     let currentEq1 = [], currentEq2 = [];
 
-    // Cargar jugadores
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const calcMedia = (pos, st) => Math.round(STATS.reduce((a, k) => a + (W[pos][k] || 0) * st[k], 0));
+    // Jugadores viejos (solo con media) usan su media como valor en cada stat
+    const getStats = (p) => p.stats || Object.fromEntries(STATS.map((k) => [k, p.media]));
+
+    function showError(msg) {
+      const b = $("errorBanner");
+      b.textContent = msg;
+      b.classList.remove("hidden");
+    }
+
+    // ---------- Firestore ----------
     onSnapshot(playersRef, (snapshot) => {
-      allPlayers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      allPlayers = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const ids = new Set(allPlayers.map((p) => p.id));
+      selectedPlayerIds = new Set([...selectedPlayerIds].filter((id) => ids.has(id)));
+      updateSelectedCount();
       renderPlayerList();
-    });
+      $("errorBanner").classList.add("hidden");
+    }, (err) => showError("No se pudo leer la base de datos: " + err.message));
 
-    // Guardar / Editar
-    document.getElementById("playerForm").addEventListener("submit", async (e) => {
+    // ---------- Formulario ----------
+    function readStats() {
+      const st = {};
+      let ok = true;
+      document.querySelectorAll(".stat-input").forEach((i) => {
+        const v = Number(i.value);
+        if (!v) ok = false;
+        st[i.dataset.stat] = v;
+      });
+      return ok ? st : null;
+    }
+
+    function updateMediaPreview() {
+      const pos = $("posicion").value;
+      const st = readStats();
+      $("mediaPreview").textContent = pos && st ? calcMedia(pos, st) : "–";
+    }
+    document.querySelectorAll(".stat-input").forEach((i) => i.addEventListener("input", updateMediaPreview));
+    $("posicion").addEventListener("change", updateMediaPreview);
+
+    $("playerForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const id = document.getElementById("playerId").value;
-      const nombre = document.getElementById("nombre").value.trim();
-      const media = Number(document.getElementById("media").value);
-      const posicion = document.getElementById("posicion").value;
-
-      if (!nombre || !media || !posicion) return;
-
-      if (id) {
-        await updateDoc(doc(db, "jugadores", id), { nombre, media, posicion });
+      const id = $("playerId").value;
+      const nombre = $("nombre").value.trim();
+      const posicion = $("posicion").value;
+      const stats = readStats();
+      if (!nombre || !POS.includes(posicion) || !stats) return;
+      const data = { nombre, posicion, stats, media: calcMedia(posicion, stats) };
+      try {
+        if (id) await updateDoc(doc(db, "jugadores", id), data);
+        else await addDoc(playersRef, data);
         resetForm();
-      } else {
-        await addDoc(playersRef, { nombre, media, posicion });
-        resetForm();
+      } catch (err) {
+        showError("No se pudo guardar: " + err.message);
       }
     });
 
     function resetForm() {
-      document.getElementById("playerForm").reset();
-      document.getElementById("playerId").value = "";
-      document.getElementById("formTitle").innerText = "Registrar Jugador";
-      document.getElementById("btnSubmit").innerText = "Guardar";
-      document.getElementById("btnCancelEdit").classList.add("hidden");
+      $("playerForm").reset();
+      $("playerId").value = "";
+      $("formTitle").innerText = "Registrar Jugador";
+      $("btnSubmit").innerText = "Guardar";
+      $("btnCancelEdit").classList.add("hidden");
+      updateMediaPreview();
     }
+    $("btnCancelEdit").onclick = resetForm;
 
-    document.getElementById("btnCancelEdit").onclick = resetForm;
-
-    // Filtro de búsqueda
-    document.getElementById("searchInput").oninput = () => renderPlayerList();
-
-    // Desmarcar todos
-    document.getElementById("btnUnselectAll").onclick = () => {
+    // ---------- Búsqueda / selección ----------
+    $("searchInput").oninput = renderPlayerList;
+    $("btnUnselectAll").onclick = () => {
       selectedPlayerIds.clear();
       updateSelectedCount();
       renderPlayerList();
@@ -161,172 +246,263 @@
 
     function updateSelectedCount() {
       const count = selectedPlayerIds.size;
-      document.getElementById("selectedCount").innerText = count;
-
-      const badge = document.getElementById("formatBadge");
-      if (count === 0) badge.innerText = "Selecciona jugadores para detectar formato";
-      else if (count % 2 !== 0) badge.innerText = `⚠️ ${count} seleccionados (Número impar)`;
+      $("selectedCount").innerText = count;
+      const badge = $("formatBadge");
+      if (count === 0) badge.innerText = "Seleccioná jugadores para detectar formato";
+      else if (count % 2 !== 0) badge.innerText = `⚠️ ${count} seleccionados (número impar)`;
       else if (count === 10) badge.innerText = "⚽ Formato: Fútbol 5 (5 vs 5)";
       else if (count === 14) badge.innerText = "⚽ Formato: Fútbol 7 (7 vs 7)";
       else if (count === 22) badge.innerText = "⚽ Formato: Fútbol 11 (11 vs 11)";
       else badge.innerText = `⚽ ${count / 2} vs ${count / 2}`;
     }
 
-    // Renderizar Lista
     function renderPlayerList() {
-      const listContainer = document.getElementById("playerList");
-      const searchTerm = document.getElementById("searchInput").value.toLowerCase();
-      listContainer.innerHTML = "";
+      const box = $("playerList");
+      const term = $("searchInput").value.toLowerCase().trim();
+      box.innerHTML = "";
 
-      const filtered = allPlayers
-        .filter(p => p.nombre.toLowerCase().includes(searchTerm) || p.posicion.toLowerCase().includes(searchTerm))
-        .sort((a, b) => b.media - a.media);
-
-      filtered.forEach(player => {
-        const isSelected = selectedPlayerIds.has(player.id);
-        const card = document.createElement("div");
-        card.className = `p-3 rounded-lg border transition flex justify-between items-center ${
-          isSelected ? "bg-green-900/60 border-green-500" : "bg-gray-700 border-gray-600 hover:border-gray-500"
-        }`;
-        
-        card.innerHTML = `
-          <div class="flex-1 cursor-pointer select-none pr-2" id="select-${player.id}">
-            <div class="flex items-center space-x-2">
-              <span class="font-bold text-sm text-white">${player.nombre}</span>
-              <span class="text-[10px] bg-gray-800 text-gray-300 font-semibold px-1.5 py-0.5 rounded border border-gray-600">${player.posicion}</span>
+      allPlayers
+        .filter((p) => p.nombre.toLowerCase().includes(term) || p.posicion.toLowerCase().includes(term))
+        .sort((a, b) => b.media - a.media)
+        .forEach((p) => {
+          const sel = selectedPlayerIds.has(p.id);
+          const st = getStats(p);
+          const card = document.createElement("div");
+          card.className = `p-3 rounded-lg border transition flex justify-between items-center ${sel ? "bg-green-900/60 border-green-500" : "bg-gray-700 border-gray-600 hover:border-gray-500"}`;
+          card.innerHTML = `
+            <div class="flex-1 cursor-pointer select-none pr-2" data-act="sel">
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-sm">${esc(p.nombre)}</span>
+                <span class="text-[10px] bg-gray-800 text-gray-300 font-semibold px-1.5 py-0.5 rounded border border-gray-600">${esc(p.posicion)}</span>
+              </div>
+              <p class="text-xs text-gray-400">Media: <span class="font-mono font-bold text-green-400 text-sm">${p.media}</span></p>
+              <p class="text-[10px] text-gray-500 font-mono">${STATS.map((k) => `${k} ${st[k]}`).join(" · ")}</p>
             </div>
-            <p class="text-xs text-gray-400">Media: <span class="font-mono font-bold text-green-400 text-sm">${player.media}</span></p>
-          </div>
-          <div class="flex items-center space-x-1">
-            <button id="edit-${player.id}" title="Editar" class="p-1 text-gray-400 hover:text-yellow-400 transition">✏️</button>
-            <button id="del-${player.id}" title="Eliminar" class="p-1 text-gray-400 hover:text-red-400 transition">🗑️</button>
-          </div>
-        `;
+            <div class="flex items-center space-x-1">
+              <button data-act="va" title="Confirmó asistencia" class="p-1 text-xs font-semibold rounded border ${p.va ? "bg-green-600 border-green-400 text-white" : "border-gray-500 text-gray-400"}">${p.va ? "Va" : "¿Va?"}</button>
+              <button data-act="edit" title="Editar" class="p-1 text-gray-400 hover:text-yellow-400 transition">✏️</button>
+              <button data-act="del" title="Eliminar" class="p-1 text-gray-400 hover:text-red-400 transition">🗑️</button>
+            </div>`;
 
-        listContainer.appendChild(card);
-
-        document.getElementById(`select-${player.id}`).onclick = () => {
-          if (selectedPlayerIds.has(player.id)) selectedPlayerIds.delete(player.id);
-          else selectedPlayerIds.add(player.id);
-          updateSelectedCount();
-          renderPlayerList();
-        };
-
-        document.getElementById(`edit-${player.id}`).onclick = (e) => {
-          e.stopPropagation();
-          document.getElementById("playerId").value = player.id;
-          document.getElementById("nombre").value = player.nombre;
-          document.getElementById("media").value = player.media;
-          document.getElementById("posicion").value = player.posicion;
-          document.getElementById("formTitle").innerText = `Editar a ${player.nombre}`;
-          document.getElementById("btnSubmit").innerText = "Actualizar";
-          document.getElementById("btnCancelEdit").classList.remove("hidden");
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        document.getElementById(`del-${player.id}`).onclick = async (e) => {
-          e.stopPropagation();
-          if (confirm(`¿Eliminar a ${player.nombre}?`)) {
-            selectedPlayerIds.delete(player.id);
+          card.querySelector('[data-act="sel"]').onclick = () => {
+            if (sel) selectedPlayerIds.delete(p.id);
+            else selectedPlayerIds.add(p.id);
             updateSelectedCount();
-            await deleteDoc(doc(db, "jugadores", player.id));
+            renderPlayerList();
+          };
+          card.querySelector('[data-act="va"]').onclick = async () => {
+            try { await updateDoc(doc(db, "jugadores", p.id), { va: !p.va }); }
+            catch (err) { showError("No se pudo actualizar la asistencia: " + err.message); }
+          };
+          card.querySelector('[data-act="edit"]').onclick = () => {
+            $("playerId").value = p.id;
+            $("nombre").value = p.nombre;
+            $("posicion").value = p.posicion;
+            document.querySelectorAll(".stat-input").forEach((i) => (i.value = st[i.dataset.stat]));
+            $("formTitle").innerText = `Editar a ${p.nombre}`;
+            $("btnSubmit").innerText = "Actualizar";
+            $("btnCancelEdit").classList.remove("hidden");
+            updateMediaPreview();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          };
+          card.querySelector('[data-act="del"]').onclick = async () => {
+            if (!confirm(`¿Eliminar a ${p.nombre}?`)) return;
+            try {
+              selectedPlayerIds.delete(p.id);
+              updateSelectedCount();
+              await deleteDoc(doc(db, "jugadores", p.id));
+            } catch (err) {
+              showError("No se pudo eliminar: " + err.message);
+            }
+          };
+          box.appendChild(card);
+        });
+    }
+
+    // ---------- ALGORITMO DE EQUILIBRIO ----------
+    // Vector por jugador: [media, DEF, PAS, TIR, FIS, ARQ, #POR, #DEF, #MED, #DEL]
+    const toVec = (p) => {
+      const st = getStats(p);
+      return [p.media, ...STATS.map((k) => st[k]), ...POS.map((x) => (p.posicion === x ? 1 : 0))];
+    };
+
+    // Costo: menor = más parejo. Penaliza diferencia de media, de cada stat
+    // y de cantidad por posición (el arquero pesa más).
+    function costOf(S, T, k, n) {
+      const m = n - k;
+      let c = 3 * Math.abs(S[0] / k - (T[0] - S[0]) / m);
+      for (let i = 1; i <= 5; i++) c += 0.5 * Math.abs(S[i] / k - (T[i] - S[i]) / m);
+      for (let i = 6; i <= 9; i++) {
+        const diff = Math.abs(S[i] - ((T[i] - S[i]) * k) / m);
+        c += (i === 6 ? 8 : 4) * diff;
+      }
+      return c;
+    }
+
+    function balancearEquipos(jugadores, random = false) {
+      const n = jugadores.length;
+      const k = Math.floor(n / 2);
+      const V = jugadores.map(toVec);
+      const T = new Array(10).fill(0);
+      V.forEach((v) => v.forEach((x, i) => (T[i] += x)));
+      let results = []; // [costo, índices del equipo 1]
+
+      if (n <= 20) {
+        // Búsqueda exhaustiva: prueba todas las combinaciones posibles
+        const S = new Array(10).fill(0);
+        const pick = [];
+        const add = (i, s) => V[i].forEach((x, j) => (S[j] += s * x));
+        const rec = (start) => {
+          if (pick.length === k) { results.push([costOf(S, T, k, n), pick.slice()]); return; }
+          for (let i = start; i <= n - (k - pick.length); i++) {
+            if (n % 2 === 0 && pick.length === 0 && i > 0) break; // evita espejos
+            pick.push(i); add(i, 1);
+            rec(i + 1);
+            add(i, -1); pick.pop();
           }
         };
-      });
-    }
-
-    // ALGORITMO AVANZADO DE BALANCEO
-    function balancearEquipos(jugadores, allowRandomness = false) {
-      const eq1 = [];
-      const eq2 = [];
-      let sum1 = 0;
-      let sum2 = 0;
-
-      // Agrupar por posiciones
-      const arqueros = jugadores.filter(p => p.posicion === 'POR');
-      const campo = jugadores.filter(p => p.posicion !== 'POR');
-
-      // 1. Repartir Arqueros primero
-      arqueros.forEach((arq) => {
-        if (sum1 <= sum2) { eq1.push(arq); sum1 += arq.media; }
-        else { eq2.push(arq); sum2 += arq.media; }
-      });
-
-      // 2. Ordenar jugadores de campo por posición y media
-      let pool = [...campo].sort((a, b) => b.media - a.media);
-
-      if (allowRandomness) {
-        // Mezclar ligeramente jugadores con medias similares (+/- 3 puntos)
-        for (let i = 0; i < pool.length - 1; i++) {
-          if (Math.abs(pool[i].media - pool[i+1].media) <= 3 && Math.random() > 0.5) {
-            [pool[i], pool[i+1]] = [pool[i+1], pool[i]];
+        rec(0);
+      } else {
+        // Muchos jugadores: mejora local con intercambios y reinicios
+        const calc = (idx) => {
+          const S = new Array(10).fill(0);
+          idx.forEach((i) => V[i].forEach((x, j) => (S[j] += x)));
+          return costOf(S, T, k, n);
+        };
+        for (let r = 0; r < 150; r++) {
+          const order = [...Array(n).keys()].sort(() => Math.random() - 0.5);
+          let a = order.slice(0, k), b = order.slice(k);
+          let best = calc(a), improved = true;
+          while (improved) {
+            improved = false;
+            for (let i = 0; i < a.length; i++) {
+              for (let j = 0; j < b.length; j++) {
+                [a[i], b[j]] = [b[j], a[i]];
+                const c = calc(a);
+                if (c < best - 1e-9) { best = c; improved = true; }
+                else [a[i], b[j]] = [b[j], a[i]];
+              }
+            }
           }
+          results.push([best, a.slice()]);
         }
       }
 
-      // 3. Snake draft con balance de suma de medias
-      pool.forEach(player => {
-        if (sum1 <= sum2) {
-          eq1.push(player);
-          sum1 += player.media;
-        } else {
-          eq2.push(player);
-          sum2 += player.media;
-        }
-      });
-
-      return { eq1, eq2, sum1, sum2 };
+      results.sort((x, y) => x[0] - y[0]);
+      const min = results[0][0];
+      const pool = random ? results.filter((r) => r[0] <= min + 1.2).slice(0, 30) : [results[0]];
+      const [cost, idx] = pool[Math.floor(Math.random() * pool.length)];
+      const set = new Set(idx);
+      let eq1 = jugadores.filter((_, i) => set.has(i));
+      let eq2 = jugadores.filter((_, i) => !set.has(i));
+      if (random && Math.random() > 0.5) [eq1, eq2] = [eq2, eq1];
+      return { eq1, eq2, cost };
     }
 
-    document.getElementById("btnArmar").onclick = () => {
-      const selected = allPlayers.filter(p => selectedPlayerIds.has(p.id));
-      if (selected.length < 2) {
-        alert("Selecciona al menos 2 jugadores.");
-        return;
+    // ---------- Resultados ----------
+    const avg = (arr, f) => (arr.length ? arr.reduce((a, p) => a + f(p), 0) / arr.length : 0);
+    const posOrder = (p) => POS.indexOf(p.posicion);
+    const posSummary = (team) => POS.map((x) => `${team.filter((p) => p.posicion === x).length} ${x}`).join(" · ");
+
+    function etiqueta(cost) {
+      if (cost < 3) return "🟢 Excelente";
+      if (cost < 6) return "🟢 Muy parejo";
+      if (cost < 10) return "🟡 Aceptable";
+      return "🟠 Desparejo (pocos jugadores o posiciones muy cargadas)";
+    }
+
+    function renderResults(eq1, eq2, cost) {
+      eq1 = [...eq1].sort((a, b) => posOrder(a) - posOrder(b) || b.media - a.media);
+      eq2 = [...eq2].sort((a, b) => posOrder(a) - posOrder(b) || b.media - a.media);
+      currentEq1 = eq1; currentEq2 = eq2;
+
+      $("avgEq1").innerText = `Media: ${avg(eq1, (p) => p.media).toFixed(1)}`;
+      $("avgEq2").innerText = `Media: ${avg(eq2, (p) => p.media).toFixed(1)}`;
+      $("posEq1").innerText = posSummary(eq1);
+      $("posEq2").innerText = posSummary(eq2);
+      $("balanceInfo").innerText = `Equilibrio: ${etiqueta(cost)}`;
+
+      const gks = eq1.concat(eq2).filter((p) => p.posicion === "POR").length;
+      $("warnInfo").innerText = gks === 0 ? "⚠️ No hay arqueros: se juega sin arquero fijo."
+        : gks % 2 !== 0 ? "⚠️ Hay un solo arquero (o cantidad impar): un equipo quedará sin arquero fijo." : "";
+
+      const li = (p) => `<li class="flex justify-between items-center bg-gray-700 p-2 rounded text-sm"><span><b>${esc(p.nombre)}</b> <span class="text-xs text-gray-400">(${esc(p.posicion)})</span></span><span class="text-green-400 font-mono">${p.media}</span></li>`;
+      $("listEq1").innerHTML = eq1.map(li).join("");
+      $("listEq2").innerHTML = eq2.map(li).join("");
+
+      const rows = [["Media", (p) => p.media], ...STATS.map((k) => [k, (p) => getStats(p)[k]])];
+      $("compare").innerHTML = rows.map(([label, f]) => {
+        const a = avg(eq1, f), b = avg(eq2, f);
+        const ca = a > b ? "text-blue-300 font-bold" : "text-gray-400";
+        const cb = b > a ? "text-red-300 font-bold" : "text-gray-400";
+        return `<div class="grid grid-cols-3 text-center"><span class="${ca} font-mono">${a.toFixed(1)}</span><span class="text-gray-500 text-xs">${label}</span><span class="${cb} font-mono">${b.toFixed(1)}</span></div>`;
+      }).join("");
+
+      $("resultsSection").classList.remove("hidden");
+      window.scrollTo({ top: $("resultsSection").offsetTop - 20, behavior: "smooth" });
+    }
+
+    function armar(random) {
+      const selected = allPlayers.filter((p) => selectedPlayerIds.has(p.id));
+      if (selected.length < 2) { alert("Seleccioná al menos 2 jugadores."); return; }
+      const res = balancearEquipos(selected, random);
+      renderResults(res.eq1, res.eq2, res.cost);
+    }
+    $("btnArmar").onclick = () => armar(false);
+    $("btnResortear").onclick = () => armar(true);
+
+    // ---------- Confirmados, partidos e historial ----------
+    $("btnConfirmados").onclick = () => {
+      selectedPlayerIds = new Set(allPlayers.filter((p) => p.va).map((p) => p.id));
+      updateSelectedCount();
+      renderPlayerList();
+    };
+
+    const partidosRef = collection(db, "partidos");
+    const fmtFecha = (f) => (f ? new Date(f).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "");
+
+    onSnapshot(partidosRef, (snap) => {
+      const list = snap.docs.map((d) => d.data()).sort((a, b) => b.ts - a.ts).slice(0, 10);
+      $("historial").innerHTML = list.length
+        ? list.map((m) => `
+          <div class="bg-gray-700 rounded p-3">
+            <div class="flex justify-between items-center">
+              <span class="font-mono font-bold"><span class="text-blue-400">Eq.1</span> ${m.goles1} - ${m.goles2} <span class="text-red-400">Eq.2</span></span>
+              <span class="text-xs text-gray-400">${esc(fmtFecha(m.fecha))}${m.cancha ? " · " + esc(m.cancha) : ""}</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-1"><span class="text-blue-300">${m.eq1.map((x) => esc(x.split(" (")[0])).join(", ")}</span><br><span class="text-red-300">${m.eq2.map((x) => esc(x.split(" (")[0])).join(", ")}</span></p>
+          </div>`).join("")
+        : '<p class="text-xs text-gray-500">Todavía no hay partidos guardados.</p>';
+    }, (err) => showError("No se pudo leer el historial: " + err.message));
+
+    $("btnGuardarPartido").onclick = async () => {
+      if (!currentEq1.length) return;
+      const g1 = $("goles1").value, g2 = $("goles2").value;
+      if (g1 === "" || g2 === "") { alert("Cargá el resultado de los dos equipos."); return; }
+      const fmt = (t) => t.map((p) => `${p.nombre} (${p.posicion})`);
+      try {
+        await addDoc(partidosRef, {
+          fecha: $("fecha").value, cancha: $("cancha").value.trim().slice(0, 40),
+          eq1: fmt(currentEq1), eq2: fmt(currentEq2),
+          goles1: Number(g1), goles2: Number(g2), ts: Date.now()
+        });
+        $("goles1").value = ""; $("goles2").value = "";
+      } catch (err) {
+        showError("No se pudo guardar el partido: " + err.message);
       }
-      const res = balancearEquipos(selected, false);
-      currentEq1 = res.eq1; currentEq2 = res.eq2;
-      renderResults(res.eq1, res.eq2, res.sum1, res.sum2);
     };
 
-    document.getElementById("btnResortear").onclick = () => {
-      const selected = allPlayers.filter(p => selectedPlayerIds.has(p.id));
-      const res = balancearEquipos(selected, true);
-      currentEq1 = res.eq1; currentEq2 = res.eq2;
-      renderResults(res.eq1, res.eq2, res.sum1, res.sum2);
-    };
-
-    function renderResults(eq1, eq2, sum1, sum2) {
-      const avg1 = (sum1 / eq1.length).toFixed(1);
-      const avg2 = (sum2 / eq2.length).toFixed(1);
-
-      document.getElementById("avgEq1").innerText = `Promedio: ${avg1}`;
-      document.getElementById("avgEq2").innerText = `Promedio: ${avg2}`;
-
-      const list1 = document.getElementById("listEq1");
-      const list2 = document.getElementById("listEq2");
-
-      list1.innerHTML = eq1.map(p => `<li class="flex justify-between bg-gray-700 p-2 rounded text-sm"><span><b>${p.nombre}</b> (${p.posicion})</span> <span class="text-green-400 font-mono">${p.media}</span></li>`).join("");
-      list2.innerHTML = eq2.map(p => `<li class="flex justify-between bg-gray-700 p-2 rounded text-sm"><span><b>${p.nombre}</b> (${p.posicion})</span> <span class="text-green-400 font-mono">${p.media}</span></li>`).join("");
-
-      document.getElementById("resultsSection").classList.remove("hidden");
-      window.scrollTo({ top: document.getElementById("resultsSection").offsetTop - 20, behavior: 'smooth' });
-    }
-
-    // Compartir por WhatsApp
-    document.getElementById("btnWsp").onclick = () => {
-      const avg1 = (currentEq1.reduce((acc, p) => acc + p.media, 0) / currentEq1.length).toFixed(1);
-      const avg2 = (currentEq2.reduce((acc, p) => acc + p.media, 0) / currentEq2.length).toFixed(1);
-
-      let text = `⚽ *PARTIDO CONFIRMADO* ⚽\n\n`;
-      text += `🔵 *EQUIPO 1* (Promedio: ${avg1})\n`;
-      currentEq1.forEach(p => text += `• ${p.nombre} (${p.posicion})\n`);
-
-      text += `\n🔴 *EQUIPO 2* (Promedio: ${avg2})\n`;
-      currentEq2.forEach(p => text += `• ${p.nombre} (${p.posicion})\n`);
-
-      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-      window.open(url, '_blank');
+    // ---------- WhatsApp ----------
+    $("btnWsp").onclick = () => {
+      if (!currentEq1.length) return;
+      const a1 = avg(currentEq1, (p) => p.media).toFixed(1);
+      const a2 = avg(currentEq2, (p) => p.media).toFixed(1);
+      const cuando = fmtFecha($("fecha").value), donde = $("cancha").value.trim();
+      let text = `⚽ *PARTIDO CONFIRMADO* ⚽\n${cuando ? "📅 " + cuando + "\n" : ""}${donde ? "📍 " + donde + "\n" : ""}\n🔵 *EQUIPO 1* (Media: ${a1})\n`;
+      currentEq1.forEach((p) => (text += `• ${p.nombre} (${p.posicion})\n`));
+      text += `\n🔴 *EQUIPO 2* (Media: ${a2})\n`;
+      currentEq2.forEach((p) => (text += `• ${p.nombre} (${p.posicion})\n`));
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
     };
   </script>
 </body>
