@@ -11,7 +11,7 @@
   <div class="max-w-4xl mx-auto space-y-8">
     <header class="text-center">
       <h1 class="text-3xl font-bold text-green-400">⚽ MatchMaker Fútbol</h1>
-      <p class="text-gray-400">Registra jugadores, edítalos y arma equipos equilibrados</p>
+      <p class="text-gray-400">Armá equipos equilibrados por posición y nivel</p>
     </header>
 
     <!-- Formulario de Registro / Edición -->
@@ -36,40 +36,56 @@
       </form>
     </section>
 
-    <!-- Selección de Jugadores Presentes -->
-    <section class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-      <div class="flex justify-between items-center mb-4">
+    <!-- Selección de Convocados -->
+    <section class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 space-y-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 class="text-xl font-semibold">Jugadores Convocados (<span id="selectedCount">0</span>)</h2>
-          <p class="text-xs text-gray-400">Haz clic en una tarjeta para convocar/desconvocar</p>
+          <h2 class="text-xl font-semibold">Convocados (<span id="selectedCount">0</span>)</h2>
+          <p id="formatBadge" class="text-xs text-yellow-400 font-medium">Seleccioná jugadores para detectar formato</p>
         </div>
-        <div class="space-x-2">
+
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <input type="text" id="searchInput" placeholder="Buscar jugador..." class="bg-gray-700 text-sm px-3 py-1.5 rounded border border-gray-600 focus:outline-none focus:border-green-500 flex-1 md:w-40">
           <button id="btnUnselectAll" class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded border border-gray-600">Desmarcar Todos</button>
-          <button id="btnArmar" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded transition disabled:opacity-50">Armar Equipos</button>
+          <button id="btnArmar" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded transition disabled:opacity-50">Armar Equipos</button>
         </div>
       </div>
 
       <div id="playerList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        <!-- Se cargan dinámicamente desde Firestore -->
+        <!-- Carga dinámica -->
       </div>
     </section>
 
     <!-- Resultado de Equipos -->
-    <section id="resultsSection" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-gray-800 p-6 rounded-xl border-2 border-blue-500">
-        <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-          <h3 class="text-lg font-bold text-blue-400">Equipo 1</h3>
-          <span class="bg-blue-900 text-blue-200 text-sm font-semibold px-2.5 py-0.5 rounded" id="avgEq1">Media: 0</span>
+    <section id="resultsSection" class="hidden space-y-4">
+      <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
+        <h3 class="text-lg font-bold text-green-400">Equipos Armados</h3>
+        <div class="flex gap-2">
+          <button id="btnResortear" class="bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold px-4 py-2 rounded transition flex items-center gap-1">
+            🔀 Re-sortear
+          </button>
+          <button id="btnWsp" class="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded transition flex items-center gap-1">
+            📲 WhatsApp
+          </button>
         </div>
-        <ul id="listEq1" class="space-y-2"></ul>
       </div>
 
-      <div class="bg-gray-800 p-6 rounded-xl border-2 border-red-500">
-        <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-          <h3 class="text-lg font-bold text-red-400">Equipo 2</h3>
-          <span class="bg-red-900 text-red-200 text-sm font-semibold px-2.5 py-0.5 rounded" id="avgEq2">Media: 0</span>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-800 p-6 rounded-xl border-2 border-blue-500">
+          <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+            <h3 class="text-lg font-bold text-blue-400">Equipo 1</h3>
+            <span class="bg-blue-900 text-blue-200 text-sm font-semibold px-2.5 py-0.5 rounded" id="avgEq1">Media: 0</span>
+          </div>
+          <ul id="listEq1" class="space-y-2"></ul>
         </div>
-        <ul id="listEq2" class="space-y-2"></ul>
+
+        <div class="bg-gray-800 p-6 rounded-xl border-2 border-red-500">
+          <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+            <h3 class="text-lg font-bold text-red-400">Equipo 2</h3>
+            <span class="bg-red-900 text-red-200 text-sm font-semibold px-2.5 py-0.5 rounded" id="avgEq2">Media: 0</span>
+          </div>
+          <ul id="listEq2" class="space-y-2"></ul>
+        </div>
       </div>
     </section>
   </div>
@@ -79,7 +95,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Reemplaza con la configuración de tu consola de Firebase
+    // Reemplaza con tus claves de Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDLD9jgjvzyXYfv43KUMwkmZVNPIK0epnk",
         authDomain: "futbol-24821.firebaseapp.com",
@@ -96,14 +112,15 @@
 
     let allPlayers = [];
     let selectedPlayerIds = new Set();
+    let currentEq1 = [], currentEq2 = [];
 
-    // Cargar jugadores en tiempo real
+    // Cargar jugadores
     onSnapshot(playersRef, (snapshot) => {
       allPlayers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       renderPlayerList();
     });
 
-    // Guardar o Actualizar Jugador
+    // Guardar / Editar
     document.getElementById("playerForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = document.getElementById("playerId").value;
@@ -114,18 +131,14 @@
       if (!nombre || !media || !posicion) return;
 
       if (id) {
-        // Modo Edición
-        const playerDoc = doc(db, "jugadores", id);
-        await updateDoc(playerDoc, { nombre, media, posicion });
+        await updateDoc(doc(db, "jugadores", id), { nombre, media, posicion });
         resetForm();
       } else {
-        // Modo Creación
         await addDoc(playersRef, { nombre, media, posicion });
         resetForm();
       }
     });
 
-    // Resetear formulario a estado inicial
     function resetForm() {
       document.getElementById("playerForm").reset();
       document.getElementById("playerId").value = "";
@@ -136,19 +149,40 @@
 
     document.getElementById("btnCancelEdit").onclick = resetForm;
 
-    // Desmarcar todos los convocados
+    // Filtro de búsqueda
+    document.getElementById("searchInput").oninput = () => renderPlayerList();
+
+    // Desmarcar todos
     document.getElementById("btnUnselectAll").onclick = () => {
       selectedPlayerIds.clear();
-      document.getElementById("selectedCount").innerText = 0;
+      updateSelectedCount();
       renderPlayerList();
     };
 
-    // Renderizar lista de convocables
+    function updateSelectedCount() {
+      const count = selectedPlayerIds.size;
+      document.getElementById("selectedCount").innerText = count;
+
+      const badge = document.getElementById("formatBadge");
+      if (count === 0) badge.innerText = "Selecciona jugadores para detectar formato";
+      else if (count % 2 !== 0) badge.innerText = `⚠️ ${count} seleccionados (Número impar)`;
+      else if (count === 10) badge.innerText = "⚽ Formato: Fútbol 5 (5 vs 5)";
+      else if (count === 14) badge.innerText = "⚽ Formato: Fútbol 7 (7 vs 7)";
+      else if (count === 22) badge.innerText = "⚽ Formato: Fútbol 11 (11 vs 11)";
+      else badge.innerText = `⚽ ${count / 2} vs ${count / 2}`;
+    }
+
+    // Renderizar Lista
     function renderPlayerList() {
       const listContainer = document.getElementById("playerList");
+      const searchTerm = document.getElementById("searchInput").value.toLowerCase();
       listContainer.innerHTML = "";
 
-      allPlayers.sort((a, b) => b.media - a.media).forEach(player => {
+      const filtered = allPlayers
+        .filter(p => p.nombre.toLowerCase().includes(searchTerm) || p.posicion.toLowerCase().includes(searchTerm))
+        .sort((a, b) => b.media - a.media);
+
+      filtered.forEach(player => {
         const isSelected = selectedPlayerIds.has(player.id);
         const card = document.createElement("div");
         card.className = `p-3 rounded-lg border transition flex justify-between items-center ${
@@ -171,58 +205,66 @@
 
         listContainer.appendChild(card);
 
-        // Evento seleccionar/deseleccionar
         document.getElementById(`select-${player.id}`).onclick = () => {
-          if (selectedPlayerIds.has(player.id)) {
-            selectedPlayerIds.delete(player.id);
-          } else {
-            selectedPlayerIds.add(player.id);
-          }
-          document.getElementById("selectedCount").innerText = selectedPlayerIds.size;
+          if (selectedPlayerIds.has(player.id)) selectedPlayerIds.delete(player.id);
+          else selectedPlayerIds.add(player.id);
+          updateSelectedCount();
           renderPlayerList();
         };
 
-        // Evento Editar
         document.getElementById(`edit-${player.id}`).onclick = (e) => {
           e.stopPropagation();
           document.getElementById("playerId").value = player.id;
           document.getElementById("nombre").value = player.nombre;
           document.getElementById("media").value = player.media;
           document.getElementById("posicion").value = player.posicion;
-          
           document.getElementById("formTitle").innerText = `Editar a ${player.nombre}`;
           document.getElementById("btnSubmit").innerText = "Actualizar";
           document.getElementById("btnCancelEdit").classList.remove("hidden");
           window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // Evento Eliminar
         document.getElementById(`del-${player.id}`).onclick = async (e) => {
           e.stopPropagation();
-          if (confirm(`¿Seguro que quieres eliminar a ${player.nombre}?`)) {
+          if (confirm(`¿Eliminar a ${player.nombre}?`)) {
             selectedPlayerIds.delete(player.id);
-            document.getElementById("selectedCount").innerText = selectedPlayerIds.size;
+            updateSelectedCount();
             await deleteDoc(doc(db, "jugadores", player.id));
           }
         };
       });
     }
 
-    // Algoritmo de Balanceo
-    document.getElementById("btnArmar").onclick = () => {
-      const selected = allPlayers.filter(p => selectedPlayerIds.has(p.id));
-      if (selected.length < 2) {
-        alert("Selecciona al menos 2 jugadores.");
-        return;
-      }
-
-      const pool = [...selected].sort((a, b) => b.media - a.media);
-
+    // ALGORITMO AVANZADO DE BALANCEO
+    function balancearEquipos(jugadores, allowRandomness = false) {
       const eq1 = [];
       const eq2 = [];
       let sum1 = 0;
       let sum2 = 0;
 
+      // Agrupar por posiciones
+      const arqueros = jugadores.filter(p => p.posicion === 'POR');
+      const campo = jugadores.filter(p => p.posicion !== 'POR');
+
+      // 1. Repartir Arqueros primero
+      arqueros.forEach((arq) => {
+        if (sum1 <= sum2) { eq1.push(arq); sum1 += arq.media; }
+        else { eq2.push(arq); sum2 += arq.media; }
+      });
+
+      // 2. Ordenar jugadores de campo por posición y media
+      let pool = [...campo].sort((a, b) => b.media - a.media);
+
+      if (allowRandomness) {
+        // Mezclar ligeramente jugadores con medias similares (+/- 3 puntos)
+        for (let i = 0; i < pool.length - 1; i++) {
+          if (Math.abs(pool[i].media - pool[i+1].media) <= 3 && Math.random() > 0.5) {
+            [pool[i], pool[i+1]] = [pool[i+1], pool[i]];
+          }
+        }
+      }
+
+      // 3. Snake draft con balance de suma de medias
       pool.forEach(player => {
         if (sum1 <= sum2) {
           eq1.push(player);
@@ -233,7 +275,25 @@
         }
       });
 
-      renderResults(eq1, eq2, sum1, sum2);
+      return { eq1, eq2, sum1, sum2 };
+    }
+
+    document.getElementById("btnArmar").onclick = () => {
+      const selected = allPlayers.filter(p => selectedPlayerIds.has(p.id));
+      if (selected.length < 2) {
+        alert("Selecciona al menos 2 jugadores.");
+        return;
+      }
+      const res = balancearEquipos(selected, false);
+      currentEq1 = res.eq1; currentEq2 = res.eq2;
+      renderResults(res.eq1, res.eq2, res.sum1, res.sum2);
+    };
+
+    document.getElementById("btnResortear").onclick = () => {
+      const selected = allPlayers.filter(p => selectedPlayerIds.has(p.id));
+      const res = balancearEquipos(selected, true);
+      currentEq1 = res.eq1; currentEq2 = res.eq2;
+      renderResults(res.eq1, res.eq2, res.sum1, res.sum2);
     };
 
     function renderResults(eq1, eq2, sum1, sum2) {
@@ -250,7 +310,24 @@
       list2.innerHTML = eq2.map(p => `<li class="flex justify-between bg-gray-700 p-2 rounded text-sm"><span><b>${p.nombre}</b> (${p.posicion})</span> <span class="text-green-400 font-mono">${p.media}</span></li>`).join("");
 
       document.getElementById("resultsSection").classList.remove("hidden");
+      window.scrollTo({ top: document.getElementById("resultsSection").offsetTop - 20, behavior: 'smooth' });
     }
+
+    // Compartir por WhatsApp
+    document.getElementById("btnWsp").onclick = () => {
+      const avg1 = (currentEq1.reduce((acc, p) => acc + p.media, 0) / currentEq1.length).toFixed(1);
+      const avg2 = (currentEq2.reduce((acc, p) => acc + p.media, 0) / currentEq2.length).toFixed(1);
+
+      let text = `⚽ *PARTIDO CONFIRMADO* ⚽\n\n`;
+      text += `🔵 *EQUIPO 1* (Promedio: ${avg1})\n`;
+      currentEq1.forEach(p => text += `• ${p.nombre} (${p.posicion})\n`);
+
+      text += `\n🔴 *EQUIPO 2* (Promedio: ${avg2})\n`;
+      currentEq2.forEach(p => text += `• ${p.nombre} (${p.posicion})\n`);
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    };
   </script>
 </body>
 </html>
