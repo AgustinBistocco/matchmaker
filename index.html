@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Armador de Equipos Parejos</title>
+  <title>MatchMaker Fútbol</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-4 md:p-8">
@@ -11,13 +11,18 @@
   <div class="max-w-4xl mx-auto space-y-8">
     <header class="text-center">
       <h1 class="text-3xl font-bold text-green-400">⚽ MatchMaker Fútbol</h1>
-      <p class="text-gray-400">Registra jugadores y arma equipos equilibrados automáticamente</p>
+      <p class="text-gray-400">Registra jugadores, edítalos y arma equipos equilibrados</p>
     </header>
 
-    <!-- Formulario de Registro -->
+    <!-- Formulario de Registro / Edición -->
     <section class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-      <h2 class="text-xl font-semibold mb-4">Registrar / Editar Jugador</h2>
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="formTitle" class="text-xl font-semibold">Registrar Jugador</h2>
+        <button id="btnCancelEdit" class="hidden text-xs bg-gray-600 hover:bg-gray-500 text-white px-2 py-1 rounded">Cancelar Edición</button>
+      </div>
+      
       <form id="playerForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input type="hidden" id="playerId">
         <input type="text" id="nombre" placeholder="Nombre de jugador" required class="bg-gray-700 px-4 py-2 rounded text-white border border-gray-600 focus:outline-none focus:border-green-500">
         <input type="number" id="media" placeholder="Media (1-99)" min="1" max="99" required class="bg-gray-700 px-4 py-2 rounded text-white border border-gray-600 focus:outline-none focus:border-green-500">
         <select id="posicion" required class="bg-gray-700 px-4 py-2 rounded text-white border border-gray-600 focus:outline-none focus:border-green-500">
@@ -27,18 +32,24 @@
           <option value="MED">Mediocampista (MED)</option>
           <option value="DEL">Delantero (DEL)</option>
         </select>
-        <button type="submit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded transition">Guardar</button>
+        <button type="submit" id="btnSubmit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded transition">Guardar</button>
       </form>
     </section>
 
     <!-- Selección de Jugadores Presentes -->
     <section class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">Jugadores Convocados (<span id="selectedCount">0</span>)</h2>
-        <button id="btnArmar" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded transition disabled:opacity-50">Armar Equipos</button>
+        <div>
+          <h2 class="text-xl font-semibold">Jugadores Convocados (<span id="selectedCount">0</span>)</h2>
+          <p class="text-xs text-gray-400">Haz clic en una tarjeta para convocar/desconvocar</p>
+        </div>
+        <div class="space-x-2">
+          <button id="btnUnselectAll" class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded border border-gray-600">Desmarcar Todos</button>
+          <button id="btnArmar" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded transition disabled:opacity-50">Armar Equipos</button>
+        </div>
       </div>
 
-      <div id="playerList" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div id="playerList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <!-- Se cargan dinámicamente desde Firestore -->
       </div>
     </section>
@@ -66,18 +77,18 @@
   <!-- Firebase SDK Modules -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // Reemplaza con la configuración de tu consola de Firebase
     const firebaseConfig = {
-  apiKey: "AIzaSyDLD9jgjvzyXYfv43KUMwkmZVNPIK0epnk",
-  authDomain: "futbol-24821.firebaseapp.com",
-  projectId: "futbol-24821",
-  storageBucket: "futbol-24821.firebasestorage.app",
-  messagingSenderId: "911015540483",
-  appId: "1:911015540483:web:fffc82fed7cc8820cf5b36",
-  measurementId: "G-X5PPFF23D6"
-    };
+        apiKey: "AIzaSyDLD9jgjvzyXYfv43KUMwkmZVNPIK0epnk",
+        authDomain: "futbol-24821.firebaseapp.com",
+        projectId: "futbol-24821",
+        storageBucket: "futbol-24821.firebasestorage.app",
+        messagingSenderId: "911015540483",
+        appId: "1:911015540483:web:fffc82fed7cc8820cf5b36",
+        measurementId: "G-X5PPFF23D6"
+        };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -95,15 +106,42 @@
     // Guardar o Actualizar Jugador
     document.getElementById("playerForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const id = document.getElementById("playerId").value;
       const nombre = document.getElementById("nombre").value.trim();
       const media = Number(document.getElementById("media").value);
       const posicion = document.getElementById("posicion").value;
 
       if (!nombre || !media || !posicion) return;
 
-      await addDoc(playersRef, { nombre, media, posicion });
-      document.getElementById("playerForm").reset();
+      if (id) {
+        // Modo Edición
+        const playerDoc = doc(db, "jugadores", id);
+        await updateDoc(playerDoc, { nombre, media, posicion });
+        resetForm();
+      } else {
+        // Modo Creación
+        await addDoc(playersRef, { nombre, media, posicion });
+        resetForm();
+      }
     });
+
+    // Resetear formulario a estado inicial
+    function resetForm() {
+      document.getElementById("playerForm").reset();
+      document.getElementById("playerId").value = "";
+      document.getElementById("formTitle").innerText = "Registrar Jugador";
+      document.getElementById("btnSubmit").innerText = "Guardar";
+      document.getElementById("btnCancelEdit").classList.add("hidden");
+    }
+
+    document.getElementById("btnCancelEdit").onclick = resetForm;
+
+    // Desmarcar todos los convocados
+    document.getElementById("btnUnselectAll").onclick = () => {
+      selectedPlayerIds.clear();
+      document.getElementById("selectedCount").innerText = 0;
+      renderPlayerList();
+    };
 
     // Renderizar lista de convocables
     function renderPlayerList() {
@@ -113,19 +151,28 @@
       allPlayers.sort((a, b) => b.media - a.media).forEach(player => {
         const isSelected = selectedPlayerIds.has(player.id);
         const card = document.createElement("div");
-        card.className = `p-3 rounded-lg border cursor-pointer transition flex justify-between items-center ${
-          isSelected ? "bg-green-900 border-green-500" : "bg-gray-700 border-gray-600 hover:border-gray-400"
+        card.className = `p-3 rounded-lg border transition flex justify-between items-center ${
+          isSelected ? "bg-green-900/60 border-green-500" : "bg-gray-700 border-gray-600 hover:border-gray-500"
         }`;
         
         card.innerHTML = `
-          <div>
-            <p class="font-bold text-sm">${player.nombre}</p>
-            <span class="text-xs bg-gray-600 px-1.5 py-0.5 rounded text-gray-300">${player.posicion}</span>
+          <div class="flex-1 cursor-pointer select-none pr-2" id="select-${player.id}">
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-sm text-white">${player.nombre}</span>
+              <span class="text-[10px] bg-gray-800 text-gray-300 font-semibold px-1.5 py-0.5 rounded border border-gray-600">${player.posicion}</span>
+            </div>
+            <p class="text-xs text-gray-400">Media: <span class="font-mono font-bold text-green-400 text-sm">${player.media}</span></p>
           </div>
-          <span class="text-lg font-mono font-bold text-green-400">${player.media}</span>
+          <div class="flex items-center space-x-1">
+            <button id="edit-${player.id}" title="Editar" class="p-1 text-gray-400 hover:text-yellow-400 transition">✏️</button>
+            <button id="del-${player.id}" title="Eliminar" class="p-1 text-gray-400 hover:text-red-400 transition">🗑️</button>
+          </div>
         `;
 
-        card.onclick = () => {
+        listContainer.appendChild(card);
+
+        // Evento seleccionar/deseleccionar
+        document.getElementById(`select-${player.id}`).onclick = () => {
           if (selectedPlayerIds.has(player.id)) {
             selectedPlayerIds.delete(player.id);
           } else {
@@ -135,11 +182,33 @@
           renderPlayerList();
         };
 
-        listContainer.appendChild(card);
+        // Evento Editar
+        document.getElementById(`edit-${player.id}`).onclick = (e) => {
+          e.stopPropagation();
+          document.getElementById("playerId").value = player.id;
+          document.getElementById("nombre").value = player.nombre;
+          document.getElementById("media").value = player.media;
+          document.getElementById("posicion").value = player.posicion;
+          
+          document.getElementById("formTitle").innerText = `Editar a ${player.nombre}`;
+          document.getElementById("btnSubmit").innerText = "Actualizar";
+          document.getElementById("btnCancelEdit").classList.remove("hidden");
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // Evento Eliminar
+        document.getElementById(`del-${player.id}`).onclick = async (e) => {
+          e.stopPropagation();
+          if (confirm(`¿Seguro que quieres eliminar a ${player.nombre}?`)) {
+            selectedPlayerIds.delete(player.id);
+            document.getElementById("selectedCount").innerText = selectedPlayerIds.size;
+            await deleteDoc(doc(db, "jugadores", player.id));
+          }
+        };
       });
     }
 
-    // Algoritmo de Balanceo (Greedy snake drafting con ajustes de posición)
+    // Algoritmo de Balanceo
     document.getElementById("btnArmar").onclick = () => {
       const selected = allPlayers.filter(p => selectedPlayerIds.has(p.id));
       if (selected.length < 2) {
@@ -147,7 +216,6 @@
         return;
       }
 
-      // Ordenar seleccionados de mayor a menor media
       const pool = [...selected].sort((a, b) => b.media - a.media);
 
       const eq1 = [];
@@ -155,7 +223,6 @@
       let sum1 = 0;
       let sum2 = 0;
 
-      // Asignar alternando sumas para equilibrar el total acumulado
       pool.forEach(player => {
         if (sum1 <= sum2) {
           eq1.push(player);
